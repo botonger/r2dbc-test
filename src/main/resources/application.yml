@@ -1,0 +1,49 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: r2dbc-test
+#### write yml or configuration
+#  data:
+#    r2dbc:
+#      repositories:
+#        enabled: true
+#  r2dbc:
+#    url: r2dbc:mariadb://localhost:3306/apod
+#    username: root
+#    password: 1234
+#    pool:
+#      enabled: true
+#      initial-size: 20
+#      max-size: 50
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} ${LOG_LEVEL_PATTERN:-%5p} %m%n"
+  level:
+    org.springframework.web.reactive.function.client.ExchangeFunctions: DEBUG
+    reactor.netty.http.client.HttpClient: DEBUG
+    org.springframework.r2dbc.core.DefaultDatabaseClient: DEBUG
+    org.springframework.data.r2dbc: DEBUG
+
+webclient:
+  connect-timeout: 10000
+  write-timeout: 30000
+  read-timeout: 30000
+  byte-count: 2097152
+
+api:
+  url: https://api.nasa.gov/planetary/apod?api_key=
+
+---
+spring:
+  config:
+    activate:
+      on-profile: stg
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod

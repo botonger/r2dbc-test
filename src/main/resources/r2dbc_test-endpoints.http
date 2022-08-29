@@ -1,0 +1,67 @@
+###
+GET http://localhost:9000/apod
+
+<> 2022-08-29T002524.200.json
+<> 2022-08-29T002355.200.json
+<> 2022-08-29T002331.200.json
+<> 2022-08-29T002107.200.json
+<> 2022-08-29T002007.200.json
+<> 2022-08-29T001744.200.json
+<> 2022-08-28T222323.200.json
+<> 2022-08-28T222241.200.json
+<> 2022-08-28T222205.200.json
+
+###
+
+GET http://localhost:9000/apod/1
+
+<> 2022-08-28T224759.200.json
+<> 2022-08-28T224421.200.json
+<> 2022-08-28T223836.200.json
+<> 2022-08-28T222308.200.json
+<> 2022-08-28T222250.200.json
+
+###
+
+# curl --location --request PUT 'http://localhost:9000/apod/1'
+#--header 'Content-Type: application/json'
+#--data-raw '{
+#    "id": 1,
+#    "title": "test-title!"
+#}'
+PUT http://localhost:9000/apod
+Content-Type: application/json
+
+{
+  "id": 1,
+  "title": "%ffgf"
+}
+
+<> 2022-08-28T222303.200.json
+<> 2022-08-28T222255.405.json
+
+###
+
+# curl --location --request DELETE 'http://localhost:9000/apod/1'
+#--header 'Content-Type: application/json'
+#--data-raw '{
+#    "id": 1,
+#    "title": "test-title!"
+#}'
+DELETE http://localhost:9000/apod/1
+Content-Type: application/json
+
+<> 2022-08-29T002528.500.json
+<> 2022-08-29T002409.500.json
+<> 2022-08-29T002333.500.json
+<> 2022-08-29T002111.200.json
+<> 2022-08-29T002010.200.json
+<> 2022-08-29T001843.200.json
+<> 2022-08-29T001757.200.json
+<> 2022-08-28T222314.200.json
+
+###
+
+
+
+
