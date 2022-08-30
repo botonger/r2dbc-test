@@ -10,7 +10,8 @@ import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.r2dbctest.exception.GlobalExceptionHandler.TitleNotProperException;
+import com.r2dbctest.exception.ApodException;
+import com.r2dbctest.exception.ErrorCode;
 
 import static java.util.Objects.requireNonNull;
 import lombok.Getter;
@@ -46,7 +47,7 @@ public class Apod {
         this.title = requireNonNull(title, "title");
 
         if(title.contains("%")) {
-            throw new TitleNotProperException();
+            throw new ApodException(ErrorCode.TITLE_NOT_PROPER.getMessage(), ErrorCode.TITLE_NOT_PROPER.getStatusCode());
         }
     }
 }

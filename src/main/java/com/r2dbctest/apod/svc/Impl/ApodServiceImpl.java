@@ -10,15 +10,17 @@ import org.springframework.data.relational.core.query.CriteriaDefinition;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.data.relational.core.query.Update;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.ReactiveTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.r2dbctest.apod.mdl.Apod;
 import com.r2dbctest.apod.repo.ApodRepository;
 import com.r2dbctest.apod.svc.ApodService;
+import com.r2dbctest.exception.ApodException;
 import com.r2dbctest.exception.GlobalExceptionHandler;
-import com.r2dbctest.exception.GlobalExceptionHandler.ResourceNotFoundException;
-import com.r2dbctest.exception.GlobalExceptionHandler.TitleNotProperException;
+
 
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -29,23 +31,36 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class ApodServiceImpl implements ApodService {
     @NonNull
-    private WebClient webClient;
-    private ApodRepository repository;
-    private R2dbcEntityOperations template;
+    private final WebClient webClient;
+    private final ApodRepository repository;
+    private final R2dbcEntityOperations template;
+    private final TransactionalOperator transactionalOperator;
 
-    public ApodServiceImpl(WebClient webClient, ApodRepository repository, R2dbcEntityOperations template) {
+    public ApodServiceImpl(WebClient webClient,
+                           ApodRepository repository,
+                           @Qualifier("postgresR2dbcEntityOperations") R2dbcEntityOperations template,
+                           @Qualifier("postgresOperator") TransactionalOperator transactionalOperator
+    ) {
         this.webClient = webClient;
         this.repository = repository;
         this.template = template;
+        this.transactionalOperator = transactionalOperator;
     }
 
+//    @Transactional( rollbackFor = {Exception.class, Throwable.class})
+//    @Transactional("postgresTransactionManager") //reactiveTransanctionalManager 명시해줘야 transactional 작동 -> TransactionManager는 하나 이상일 수 있다.
+    //-> mariadb에서는 작동하는데 Postgresql에서는 안됨
+//    @Transactional
     @Override
     public Flux<Apod> retrieveApodThenSave() {
         ////////////template
         return webClient.get().retrieve().bodyToMono(Apod.class)
-                         .flatMap(template::insert)
-                .thenMany(template.select(Apod.class).all())
-                .take(1)
+                        .flatMap(template::insert)
+                        .then(Mono.error(new Throwable("test")))
+                        .thenMany(template.select(Apod.class).all())
+                        .takeUntil(v->v.getId()==3)
+                        .as(transactionalOperator::transactional)
+//                        .take(1)
                 ;
 
         ////////////repository
@@ -74,7 +89,7 @@ public class ApodServiceImpl implements ApodService {
         ////////////repository
         ///*
         return repository.findById(id)
-                         .switchIfEmpty(Mono.error(new ResourceNotFoundException()));
+                         .switchIfEmpty(Mono.error(new ApodException()));
 
 //@Transactional
 //                .switchIfEmpty(repository.save(new Apod("title", "copyright", null, null, null, null, null, null)))

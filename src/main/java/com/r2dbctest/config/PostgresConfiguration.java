@@ -8,10 +8,10 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
 import org.springframework.data.r2dbc.core.R2dbcEntityOperations;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.r2dbc.dialect.MySqlDialect;
+import org.springframework.data.r2dbc.dialect.PostgresDialect;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 import org.springframework.r2dbc.connection.R2dbcTransactionManager;
 import org.springframework.r2dbc.connection.init.ConnectionFactoryInitializer;
@@ -23,37 +23,45 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 
 import io.r2dbc.pool.ConnectionPool;
 import io.r2dbc.pool.ConnectionPoolConfiguration;
+import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
+import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import io.r2dbc.spi.ConnectionFactory;
 
+/**
+ * Project : r2dbc-test
+ * Created by IntelliJ IDEA
+ * Developer : cheyenneshin
+ * Date Time : 2022/08/30 4:27 PM
+ * Summary :
+ **/
 @Configuration
 @EnableTransactionManagement
-//@EnableR2dbcRepositories(basePackages = "com.r2dbctest.apod", entityOperationsRef = "mariadbR2dbcEntityOperations")
-@EnableR2dbcRepositories(entityOperationsRef = "mariadbR2dbcEntityOperations")
-public class MariaDBConfiguration {
+@EnableR2dbcRepositories(basePackages = "com.r2dbctest.apod", entityOperationsRef = "postgresR2dbcEntityOperations")
+public class PostgresConfiguration {
     @Bean
-    @Qualifier("mariadb")
-    public ConnectionFactory mariadbConnectionFactory() {
-        MariadbConnectionConfiguration conf = MariadbConnectionConfiguration.builder().host("localhost").port(3306).username("root").password("1234").database("apod").build();
+    @Qualifier("postgresql")
+    public ConnectionFactory postgresConnectionFactory() {
+        return new PostgresqlConnectionFactory(
+                PostgresqlConnectionConfiguration.builder().host("localhost").port(5432).username("testuser1").password("1234").database("apod").build());
 
-        return new MariadbConnectionFactory(conf);
     }
     @Bean
-    public R2dbcEntityOperations mariadbR2dbcEntityOperations(@Qualifier("mariadb") ConnectionFactory connectionFactory) {
+    public R2dbcEntityOperations postgresR2dbcEntityOperations(@Qualifier("postgresql") ConnectionFactory connectionFactory) {
         DatabaseClient databaseClient = DatabaseClient.create(connectionFactory);
-        return new R2dbcEntityTemplate(databaseClient, MySqlDialect.INSTANCE);
+        return new R2dbcEntityTemplate(databaseClient, PostgresDialect.INSTANCE);
     }
 
     @Bean
-    public ConnectionFactoryInitializer initializer(@Qualifier("mariadb") ConnectionFactory connectionFactory) {
+    public ConnectionFactoryInitializer postgresInitializer(@Qualifier("postgresql") ConnectionFactory connectionFactory) {
         ConnectionFactoryInitializer initializer = new ConnectionFactoryInitializer();
         initializer.setConnectionFactory(connectionFactory);
-        initializer.setDatabasePopulator(new ResourceDatabasePopulator(new ClassPathResource("schema.sql")));
+        initializer.setDatabasePopulator(new ResourceDatabasePopulator(new ClassPathResource("schema_postgres.sql")));
         return initializer;
     }
 
     //커넥션풀은 성능 오버헤드 저하 방지를 위해 데이터베이스 커넥션을 재사용
     @Bean
-    public ConnectionPool connectionPool(@Qualifier("mariadb") ConnectionFactory connectionFactory) {
+    public ConnectionPool PostgresConnectionPool(@Qualifier("postgresql") ConnectionFactory connectionFactory) {
         ConnectionPoolConfiguration poolConf = ConnectionPoolConfiguration.builder()
                                                                           .connectionFactory(connectionFactory)
                                                                           .maxIdleTime(Duration.ofMillis(1000))
@@ -63,21 +71,13 @@ public class MariaDBConfiguration {
         return new ConnectionPool(poolConf);
     }
 
+
     @Bean
-    public ReactiveTransactionManager transactionManager(@Qualifier("mariadb") ConnectionFactory connectionFactory) {
+    public ReactiveTransactionManager postgresTransactionManager(@Qualifier("postgresql") ConnectionFactory connectionFactory) {
         return new R2dbcTransactionManager(connectionFactory);
     }
     @Bean
-    public TransactionalOperator operator(@Qualifier("transactionManager") ReactiveTransactionManager transactionManager) {
+    public TransactionalOperator postgresOperator(@Qualifier("postgresTransactionManager") ReactiveTransactionManager transactionManager) {
         return TransactionalOperator.create(transactionManager);
     }
-
-//    @Bean //test용
-//    public CommandLineRunner init(ApodRepository repository) {
-//        return args -> {
-//            repository.save(Testtest.builder().name("t").job("hj").age(33).build())
-//                      .thenMany(repository.findAll())
-//                      .subscribe(System.out::println);
-//        };
-//    }
 }

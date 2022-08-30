@@ -23,12 +23,7 @@ class ApodServiceImplTest {
 
     @Test
     void retrieveApodTest(@Autowired WebClient client) {
-//        StepVerifier.create(client.get()
-//                                    .exchange()
-//                                    .expectStatus().isOk()
-//                                    .returnResult(String.class)
-//                                    .getResponseBody())
-//                .verifyComplete();
+
     }
 
 }
