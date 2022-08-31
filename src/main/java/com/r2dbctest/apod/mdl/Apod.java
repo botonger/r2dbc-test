@@ -15,9 +15,11 @@ import com.r2dbctest.exception.ErrorCode;
 
 import static java.util.Objects.requireNonNull;
 import lombok.Getter;
+import lombok.ToString;
 
 @Table("apod")
 @Getter
+@ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Apod {
     @Id

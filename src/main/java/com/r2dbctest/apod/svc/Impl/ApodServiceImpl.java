@@ -56,7 +56,7 @@ public class ApodServiceImpl implements ApodService {
         ////////////template
         return webClient.get().retrieve().bodyToMono(Apod.class)
                         .flatMap(template::insert)
-                        .then(Mono.error(new Throwable("test")))
+//                        .then(Mono.error(new Throwable("test")))
                         .thenMany(template.select(Apod.class).all())
                         .takeUntil(v->v.getId()==3)
                         .as(transactionalOperator::transactional)
@@ -128,7 +128,9 @@ public class ApodServiceImpl implements ApodService {
         return template.delete(Apod.class)
                 .from("apod")
                 .matching(Query.query(Criteria.where("id").is(id)))
-                .all();
+                .all()
+                       .as(transactionalOperator::transactional);
+
 
         ////////////repository: response type -> Mono<Void>
         /*
